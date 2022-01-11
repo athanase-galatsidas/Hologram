@@ -7,6 +7,7 @@ const app = express(),
 
 // MIDDLEWARE
 app.use(express.json()); // for parsing application/json
+app.use('/public', express.static(`${__dirname}/public`)); // testing ar js
 app.use(cors());
 
 // ROUTES

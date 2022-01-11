@@ -5,7 +5,6 @@ Application for sharing real time 3d models | Research Project for school
 ---
 
 ## Project Info
-*TODO: check pdf file for specifics*
 
 ### Research Vraag
 
@@ -15,14 +14,10 @@ Application for sharing real time 3d models | Research Project for school
 
 #### Frontend
 
-- AR.js
-- Vue.js
-
-*TODO: ux flow image here*
+-   AR.js
+-   Vue.js
 
 #### Backend
 
-- node express
-- socket.io
-
-*TODO: db scheme image here*
+-   node express
+-   socket.io

@@ -9,11 +9,9 @@
 		"resolveJsonModule": true,
 		"esModuleInterop": true,
 		"useDefineForClassFields": true,
+		"lib": ["ESNext", "DOM", "WebWorker"],
 		"baseUrl": ".",
-		"paths": {
-			"/@/*": ["src/*"]
-		},
-		"lib": ["ESNext", "DOM", "WebWorker"]
+		"paths": { "@/*": ["src/*"] }
 	},
 	"include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.tsx", "src/**/*.vue"],
 	"exclude": ["dist", "node_modules", "test", "test.ts", "**/*.spec.ts", "**/*.worker.ts"]

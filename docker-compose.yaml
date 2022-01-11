@@ -1,0 +1,26 @@
+services:
+    # frontend services
+
+    # backend services
+    db:
+        image: mongo:4.4.11-rc1-focal
+        restart: always
+        ports:
+            - 27017:27017
+        # networks:
+        #     - mongo-compose-network
+        env_file:
+            - .env
+        volumes:
+            - ./.db:/data
+
+    mongo-express:
+        image: mongo-express:1.0.0-alpha
+        ports:
+            - 8081:8081
+        # networks:
+        #     - mongo-compose-network
+        env_file:
+            - .env
+        depends_on:
+            - db

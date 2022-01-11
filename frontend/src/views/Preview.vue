@@ -2,12 +2,11 @@
 import { defineComponent } from 'vue';
 
 export default defineComponent({
+	name: 'Preview',
 	setup() {},
 });
 </script>
 
 <template>
-	<div class="text-center text-2xl">
-		<h1>Hello</h1>
-	</div>
+	<div></div>
 </template>
