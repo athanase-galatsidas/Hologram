@@ -3,6 +3,8 @@ import useScripts from '@/composable/useScripts';
 import { defineComponent, ref } from 'vue';
 import * as THREE from 'three';
 
+import { GLTF, GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
+
 import {
 	ArToolkitProfile,
 	ArToolkitSource,
@@ -10,18 +12,19 @@ import {
 	ArMarkerControls,
 	// @ts-ignore
 } from '@ar-js-org/ar.js/three.js/build/ar-threex';
+import { Vector3 } from 'three';
 
 export default defineComponent({
 	name: 'ArView',
 	setup() {},
 	mounted() {
-		// boilerplate code from official examples
+		// modified boilerplate code from official examples
 		// https://github.com/AR-js-org/AR.js/blob/190c3e635f467792e43427d02b17f2a43f1e44a1/three.js/examples/default.html
-		
+
 		ArToolkitContext.baseURL = './';
 
 		// init renderer
-		var renderer = new THREE.WebGLRenderer({
+		const renderer = new THREE.WebGLRenderer({
 			antialias: true,
 			alpha: true,
 		});
@@ -35,24 +38,23 @@ export default defineComponent({
 		document.body.appendChild(renderer.domElement); // We should be able to specify an html element to append AR.js related elements to.
 
 		// array of functions for the rendering loop
-		// @ts-ignore
-		var onRenderFcts = [];
+		const onRenderFcts: any = [];
 
 		// init scene and camera
-		var scene = new THREE.Scene();
+		const scene = new THREE.Scene();
 
 		//////////////////////////////////////////////////////////////////////////////////
 		//		Initialize a basic camera
 		//////////////////////////////////////////////////////////////////////////////////
 
 		// Create a camera
-		var camera = new THREE.Camera();
+		const camera = new THREE.Camera();
 		scene.add(camera);
 		const artoolkitProfile = new ArToolkitProfile();
 		artoolkitProfile.sourceWebcam(); // Is there good reason for having a function to set the sourceWebcam but not the displayWidth/Height etc?
 
 		// add existing parameters, this is not well documented
-		let additionalParameters = {
+		const additionalParameters = {
 			// Device id of the camera to use (optional)
 			deviceId: null,
 			// resolution of at which we initialize in the source image
@@ -92,8 +94,8 @@ export default defineComponent({
 		////////////////////////////////////////////////////////////////////////////////
 
 		// create atToolkitContext
-		var arToolkitContext = new ArToolkitContext({
-			debug: true,
+		const arToolkitContext = new ArToolkitContext({
+			debug: false,
 			cameraParametersUrl: ArToolkitContext.baseURL + 'data/camera_para.dat',
 			detectionMode: 'mono',
 			canvasWidth: 640,
@@ -118,13 +120,13 @@ export default defineComponent({
 		//          Create a ArMarkerControls
 		////////////////////////////////////////////////////////////////////////////////
 
-		var markerGroup = new THREE.Group();
+		const markerGroup = new THREE.Group();
 		scene.add(markerGroup);
 
-		var markerControls = new ArMarkerControls(arToolkitContext, markerGroup, {
+		const markerControls = new ArMarkerControls(arToolkitContext, markerGroup, {
 			type: 'pattern',
-			// patternUrl: ArToolkitContext.baseURL + 'data/patt.hiro',
 			patternUrl: ArToolkitContext.baseURL + 'data/patt.hiro',
+			// patternUrl: ArToolkitContext.baseURL + 'data/marker.patt',
 			smooth: true,
 			smoothCount: 5,
 			smoothTolerance: 0.01,
@@ -135,36 +137,47 @@ export default defineComponent({
 		//		add an object in the scene
 		//////////////////////////////////////////////////////////////////////////////////
 
-		var markerScene = new THREE.Scene();
+		const markerScene = new THREE.Scene();
 		markerGroup.add(markerScene);
 
-		var mesh = new THREE.AxesHelper();
-		markerScene.add(mesh);
+		// debug mesh
+		const axisHelper = new THREE.AxesHelper();
+		markerScene.add(axisHelper);
+
+		// TODO: models are UPSIDE DOWN
+		// create mesh loader
+		const loader = new GLTFLoader();
+		loader.load(ArToolkitContext.baseURL + 'data/asset.glb', (gltf: GLTF) => {
+			gltf.scene.scale.x = 0.5;
+			gltf.scene.scale.y = 0.5;
+			gltf.scene.scale.z = 0.5;
+			markerScene.add(gltf.scene);
+		});
+
+		// light the meshes
+		const light = new THREE.AmbientLight(0xffffff);
+		markerScene.add(light);
 
 		// add a torus knot
-		var geometry = new THREE.BoxGeometry(1, 1, 1);
-		var material = new THREE.MeshNormalMaterial({
-			transparent: true,
-			opacity: 0.5,
-			side: THREE.DoubleSide,
-		});
-		// @ts-ignore
-		var mesh = new THREE.Mesh(geometry, material);
-		mesh.position.y = geometry.parameters.height / 2;
-		markerScene.add(mesh);
+		// const boxGeometry = new THREE.BoxGeometry(1, 1, 1);
+		// const boxMaterial = new THREE.MeshNormalMaterial({
+		// 	transparent: true,
+		// 	opacity: 0.5,
+		// 	side: THREE.DoubleSide,
+		// });
+		// const boxMesh = new THREE.Mesh(boxGeometry, boxMaterial);
+		// boxMesh.position.y = boxGeometry.parameters.height / 2;
+		// markerScene.add(boxMesh);
 
-		// @ts-ignore
-		var geometry = new THREE.TorusKnotGeometry(0.3, 0.1, 64, 16);
-		var material = new THREE.MeshNormalMaterial();
-		// @ts-ignore
-		var mesh = new THREE.Mesh(geometry, material);
-		mesh.position.y = 0.5;
-		markerScene.add(mesh);
+		// var knotGeometry = new THREE.TorusKnotGeometry(0.3, 0.1, 64, 16);
+		// var knotMaterial = new THREE.MeshNormalMaterial();
+		// var knotMesh = new THREE.Mesh(knotGeometry, knotMaterial);
+		// knotMesh.position.y = 0.5;
+		// markerScene.add(knotMesh);
 
-		// @ts-ignore
-		onRenderFcts.push(function (delta) {
-			mesh.rotation.x += delta * Math.PI;
-		});
+		// onRenderFcts.push(function (delta: number) {
+		// 	knotMesh.rotation.x += delta * Math.PI;
+		// });
 
 		//////////////////////////////////////////////////////////////////////////////////
 		//		render the whole thing on the page
@@ -174,19 +187,16 @@ export default defineComponent({
 		});
 
 		// run the rendering loop
-		// @ts-ignore
-		var lastTimeMsec = null;
+		let lastTimeMsec: number | null = null;
 		requestAnimationFrame(function animate(nowMsec) {
 			// keep looping
 			requestAnimationFrame(animate);
 			// measure time
-			// @ts-ignore
 			lastTimeMsec = lastTimeMsec || nowMsec - 1000 / 60;
-			var deltaMsec = Math.min(200, nowMsec - lastTimeMsec);
+			let deltaMsec = Math.min(200, nowMsec - lastTimeMsec);
 			lastTimeMsec = nowMsec;
 			// call each update function
-			// @ts-ignore
-			onRenderFcts.forEach(function (onRenderFct) {
+			onRenderFcts.forEach(function (onRenderFct: any) {
 				onRenderFct(deltaMsec / 1000, nowMsec / 1000);
 			});
 		});
@@ -195,42 +205,10 @@ export default defineComponent({
 </script>
 
 <template>
-	<div id="ARScene"></div>
-	<!-- <a-scene
-		vr-mode-ui="enabled: false;"
-		loading-screen="enabled: false;"
-		renderer="logarithmicDepthBuffer: true;"
-		arjs="trackingMethod: best; sourceType: webcam; debugUIEnabled: false;"
-		id="scene"
-		embedded
-		gesture-detector
-	>
-		<a-assets>
-			<a-asset-item id="animated-asset" src="http://localhost:3001/public/Mask.glb"></a-asset-item>
-		</a-assets>
-
-		<a-marker
-			id="animated-marker"
-			type="pattern"
-			preset="custom"
-			url="http://localhost:3001/public/marker.patt"
-			raycaster="objects: .clickable"
-			emitevents="true"
-			cursor="fuse: false; rayOrigin: mouse;"
-		>
-			<a-entity
-				id="bowser-model"
-				scale="0.8455690451497826 0.8455690451497826 0.8455690451497826"
-				animation-mixer="loop: repeat"
-				gltf-model="#animated-asset"
-				class="clickable"
-				gesture-handler
-			>
-			</a-entity>
-		</a-marker>
-
-		<a-entity camera></a-entity>
-	</a-scene> -->
+	<div>
+		<div id="ARScene"></div>
+		<aside class="fixed bottom-0 left-0 w-full h-64 bg-white bg-opacity-50">
+			<p>ar controls</p>
+		</aside>
+	</div>
 </template>
-
-<style></style>

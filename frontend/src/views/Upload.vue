@@ -2,7 +2,7 @@
 import { defineComponent, ref } from 'vue';
 
 export default defineComponent({
-	name: 'ArMarker',
+	name: 'Upload',
 	setup() {
 		// TODO: if mobile redirect to ar-view
 
