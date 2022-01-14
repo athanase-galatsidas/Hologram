@@ -24,9 +24,9 @@ export default defineComponent({
 	<div v-show="!visible" class="max-w-3xl mx-auto my-8 flex flex-col items-center">
 		<h3 class="text-2xl">Scan this code with an AR-capable mobile device.</h3>
 
-		<button @click="toggleView(true)" class="btn-primary my-8">Next</button>
+		<p class="bg-white w-64 h-64 shadow-md my-8">TODO: generate qr code here</p>
 
-		<p class="bg-white w-128 h-128 shadow-md">TODO: generate qr code here</p>
+		<button @click="toggleView(true)" class="btn-primary">Next</button>
 	</div>
 
 	<div v-show="visible" class="max-w-3xl mx-auto my-8 flex flex-col items-center">

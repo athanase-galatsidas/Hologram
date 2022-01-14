@@ -28,6 +28,11 @@ const routes: RouteRecordRaw[] = [
 		path: '/ar-view',
 		component: () => import('@/views/ArView.vue'),
 	},
+	{
+		name: 'upload',
+		path: '/upload',
+		component: () => import('@/views/Upload.vue'),
+	},
 ];
 
 const router: Router = createRouter({
