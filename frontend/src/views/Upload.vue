@@ -2,6 +2,7 @@
 import router from '@/bootstrap/router';
 import { defineComponent, ref } from 'vue';
 import { UploadIcon } from '@heroicons/vue/outline';
+import useFetch from '@/composable/useFetch';
 
 export default defineComponent({
 	name: 'Upload',
@@ -10,11 +11,26 @@ export default defineComponent({
 	},
 	setup() {
 		const file = ref<File>();
+		const { post, URL } = useFetch();
 
-		const upload = () => {
+		console.log('the url is: ' + URL);
+
+		const upload = async () => {
 			if (!file.value) return;
 
-			// TODO: post to server
+			const formData = {
+				name: 'a cool file',
+				file: file.value,
+			};
+
+			await post(URL + '/v1/upload', formData)
+				.then((res) => res.json())
+				.then((data) => {
+					console.log(data);
+
+					// TODO: error checking
+					// if (data.status == 400) return;
+				});
 
 			router.push('/ar-marker');
 		};

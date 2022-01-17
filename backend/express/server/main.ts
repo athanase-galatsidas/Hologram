@@ -1,4 +1,4 @@
-import express, { Request, Response } from 'express';
+import express, { json, Request, Response } from 'express';
 import cors from 'cors';
 
 // APP SETUP
@@ -13,6 +13,18 @@ app.use(cors());
 // ROUTES
 app.get('/', (req: Request, res: Response) => {
 	res.send('Welcome to HoloGram!');
+});
+
+app.post('/v1/upload', (req: Request, res: Response) => {
+	console.log(req.headers);
+	console.log(req.body);
+
+	const data = {
+		status: 'ok',
+	};
+
+	res.status(200);
+	res.send(JSON.stringify(data));
 });
 
 // APP START

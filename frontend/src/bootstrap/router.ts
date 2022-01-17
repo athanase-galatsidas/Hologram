@@ -25,8 +25,9 @@ const routes: RouteRecordRaw[] = [
 	},
 	{
 		name: 'ar-view',
-		path: '/ar-view',
+		path: '/ar-view/:id',
 		component: () => import('@/views/ArView.vue'),
+		// TODO: if id does not exist goto 404
 	},
 	{
 		name: 'upload',
@@ -40,11 +41,17 @@ const router: Router = createRouter({
 	routes: routes,
 });
 
-router.beforeEach((to: RouteLocationNormalized, from: RouteLocationNormalized, next: NavigationGuardNext) => {
-	// TODO: stuff
+router.beforeEach(
+	(
+		to: RouteLocationNormalized,
+		from: RouteLocationNormalized,
+		next: NavigationGuardNext,
+	) => {
+		// TODO: stuff
 
-	// always call next
-	next();
-});
+		// always call next
+		next();
+	},
+);
 
 export default router;

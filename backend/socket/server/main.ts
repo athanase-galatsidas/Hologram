@@ -35,6 +35,14 @@ io.on('connection', (socket: Socket) => {
 		console.log(err.message);
 		console.log(err.context);
 	});
+
+	socket.on('comment', (payload: any) => {
+		// socket.emit(`comment:${payload.id}`, 'test');
+		console.log(`received: ${payload.id}`);
+
+		io.sockets.emit(`comment:${payload.id}`, 'test');
+		io.sockets.emit('test', 'this is a test');
+	});
 });
 
 // START

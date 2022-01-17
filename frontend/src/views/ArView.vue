@@ -1,10 +1,7 @@
 <script lang="ts">
-import useScripts from '@/composable/useScripts';
 import { defineComponent, ref } from 'vue';
 import * as THREE from 'three';
-
 import { GLTF, GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
-
 import {
 	ArToolkitProfile,
 	ArToolkitSource,
@@ -12,16 +9,28 @@ import {
 	ArMarkerControls,
 	// @ts-ignore
 } from '@ar-js-org/ar.js/three.js/build/ar-threex';
-import { Vector3 } from 'three';
+
+import router from '@/bootstrap/router';
+import useSocket from '@/composable/useSocket';
+import { useRoute } from 'vue-router';
 
 export default defineComponent({
 	name: 'ArView',
-	setup() {},
+	setup() {
+		const { socket } = useSocket();
+		const route = useRoute();
+
+		socket.on(`comment:${route.params.id}`, (payload: any) => {
+			console.log(`received: ${payload}`);
+		});
+
+		socket.emit('comment', { id: route.params.id });
+	},
 	mounted() {
 		// modified boilerplate code from official examples
 		// https://github.com/AR-js-org/AR.js/blob/190c3e635f467792e43427d02b17f2a43f1e44a1/three.js/examples/default.html
 
-		ArToolkitContext.baseURL = './';
+		ArToolkitContext.baseURL = '../';
 
 		// init renderer
 		const renderer = new THREE.WebGLRenderer({
@@ -35,7 +44,9 @@ export default defineComponent({
 		renderer.domElement.style.position = 'absolute';
 		renderer.domElement.style.top = '0px';
 		renderer.domElement.style.left = '0px';
+		// renderer.domElement.classList.add('ar-content');
 		document.body.appendChild(renderer.domElement); // We should be able to specify an html element to append AR.js related elements to.
+		// document.querySelector('#ARScene')?.appendChild(renderer.domElement);
 
 		// array of functions for the rendering loop
 		const onRenderFcts: any = [];
@@ -63,12 +74,18 @@ export default defineComponent({
 			// resolution displayed for the source
 			displayWidth: 640,
 			displayHeight: 480,
+			// sourceHeight: window.innerWidth,
+			// sourceWidth: window.innerHeight,
+			// displayWidth: window.innerWidth,
+			// displayHeight: window.innerHeight,
 		};
 
 		Object.assign(artoolkitProfile.sourceParameters, additionalParameters);
 		console.log(artoolkitProfile.sourceParameters); // now includes the additionalParameters
 
-		const arToolkitSource = new ArToolkitSource(artoolkitProfile.sourceParameters);
+		const arToolkitSource = new ArToolkitSource(
+			artoolkitProfile.sourceParameters,
+		);
 
 		arToolkitSource.init(function onReady() {
 			onResize();
@@ -85,7 +102,9 @@ export default defineComponent({
 			arToolkitSource.onResizeElement();
 			arToolkitSource.copyElementSizeTo(renderer.domElement);
 			if (arToolkitContext.arController !== null) {
-				arToolkitSource.copyElementSizeTo(arToolkitContext.arController.canvas);
+				arToolkitSource.copyElementSizeTo(
+					arToolkitContext.arController.canvas,
+				);
 			}
 		}
 
@@ -95,18 +114,23 @@ export default defineComponent({
 
 		// create atToolkitContext
 		const arToolkitContext = new ArToolkitContext({
-			debug: false,
-			cameraParametersUrl: ArToolkitContext.baseURL + 'data/camera_para.dat',
+			debug: true,
+			cameraParametersUrl:
+				ArToolkitContext.baseURL + 'data/camera_para.dat',
 			detectionMode: 'mono',
 			canvasWidth: 640,
 			canvasHeight: 490,
+			// canvasWidth: window.innerWidth,
+			// canvasHeight: window.innerHeight,
 			imageSmoothingEnabled: true, // There is still a warning about mozImageSmoothingEnabled when using Firefox
 		});
 
 		// initialize it
 		arToolkitContext.init(function onCompleted() {
 			// copy projection matrix to camera
-			camera.projectionMatrix.copy(arToolkitContext.getProjectionMatrix());
+			camera.projectionMatrix.copy(
+				arToolkitContext.getProjectionMatrix(),
+			);
 		});
 
 		// update artoolkit on every frame
@@ -123,15 +147,18 @@ export default defineComponent({
 		const markerGroup = new THREE.Group();
 		scene.add(markerGroup);
 
-		const markerControls = new ArMarkerControls(arToolkitContext, markerGroup, {
-			type: 'pattern',
-			patternUrl: ArToolkitContext.baseURL + 'data/patt.hiro',
-			// patternUrl: ArToolkitContext.baseURL + 'data/marker.patt',
-			smooth: true,
-			smoothCount: 5,
-			smoothTolerance: 0.01,
-			smoothThreshold: 2,
-		});
+		const markerControls = new ArMarkerControls(
+			arToolkitContext,
+			markerGroup,
+			{
+				type: 'pattern',
+				patternUrl: ArToolkitContext.baseURL + 'data/patt.hiro',
+				smooth: true,
+				smoothCount: 5,
+				smoothTolerance: 0.01,
+				smoothThreshold: 2,
+			},
+		);
 
 		//////////////////////////////////////////////////////////////////////////////////
 		//		add an object in the scene
@@ -147,12 +174,15 @@ export default defineComponent({
 		// TODO: models are UPSIDE DOWN
 		// create mesh loader
 		const loader = new GLTFLoader();
-		loader.load(ArToolkitContext.baseURL + 'data/asset.glb', (gltf: GLTF) => {
-			gltf.scene.scale.x = 0.5;
-			gltf.scene.scale.y = 0.5;
-			gltf.scene.scale.z = 0.5;
-			markerScene.add(gltf.scene);
-		});
+		loader.load(
+			ArToolkitContext.baseURL + 'data/asset.glb',
+			(gltf: GLTF) => {
+				gltf.scene.scale.x = 0.5;
+				gltf.scene.scale.y = 0.5;
+				gltf.scene.scale.z = 0.5;
+				markerScene.add(gltf.scene);
+			},
+		);
 
 		// light the meshes
 		const light = new THREE.AmbientLight(0xffffff);
@@ -205,10 +235,18 @@ export default defineComponent({
 </script>
 
 <template>
-	<div>
-		<div id="ARScene"></div>
-		<aside class="fixed bottom-0 left-0 w-full h-64 bg-white bg-opacity-50">
-			<p>ar controls</p>
+	<div class="relative">
+		<!-- <div class="ar-view" id="ARScene"></div> -->
+		<aside
+			class="fixed z-10 bottom-0 left-0 w-full h-32 bg-white bg-opacity-50"
+		>
+			<span>ar controls</span>
 		</aside>
 	</div>
 </template>
+
+<style lang="postcss" scoped>
+.ar-view {
+	@apply w-full h-full absolute top-0 left-0;
+}
+</style>
