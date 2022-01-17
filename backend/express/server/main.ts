@@ -2,8 +2,8 @@ import express, { json, Request, Response } from 'express';
 import cors from 'cors';
 
 // APP SETUP
-const app = express(),
-	port = process.env.PORT || 3001;
+const app = express();
+const port = process.env.PORT || 3001;
 
 // MIDDLEWARE
 app.use(express.json()); // for parsing application/json

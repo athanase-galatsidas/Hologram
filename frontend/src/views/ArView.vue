@@ -1,5 +1,5 @@
 <script lang="ts">
-import { defineComponent, ref } from 'vue';
+import { defineComponent } from 'vue';
 import * as THREE from 'three';
 import { GLTF, GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import {
@@ -28,9 +28,9 @@ export default defineComponent({
 	},
 	mounted() {
 		// modified boilerplate code from official examples
-		// https://github.com/AR-js-org/AR.js/blob/190c3e635f467792e43427d02b17f2a43f1e44a1/three.js/examples/default.html
+		// https://github.com/AR-js-org/AR.js/tree/190c3e635f467792e43427d02b17f2a43f1e44a1/three.js/examples
 
-		ArToolkitContext.baseURL = '../';
+		ArToolkitContext.baseURL = '/';
 
 		// init renderer
 		const renderer = new THREE.WebGLRenderer({
@@ -64,20 +64,23 @@ export default defineComponent({
 		const artoolkitProfile = new ArToolkitProfile();
 		artoolkitProfile.sourceWebcam(); // Is there good reason for having a function to set the sourceWebcam but not the displayWidth/Height etc?
 
+		// update & store camera position
+		onRenderFcts.push(function () {
+			console.log(
+				`x: ${camera.position.x}, y: ${camera.position.y}, z: ${camera.position.z}`,
+			);
+		});
+
 		// add existing parameters, this is not well documented
 		const additionalParameters = {
 			// Device id of the camera to use (optional)
 			deviceId: null,
 			// resolution of at which we initialize in the source image
-			sourceWidth: 640,
-			sourceHeight: 480,
+			sourceWidth: 480,
+			sourceHeight: 640,
 			// resolution displayed for the source
-			displayWidth: 640,
-			displayHeight: 480,
-			// sourceHeight: window.innerWidth,
-			// sourceWidth: window.innerHeight,
-			// displayWidth: window.innerWidth,
-			// displayHeight: window.innerHeight,
+			displayWidth: 480,
+			displayHeight: 640,
 		};
 
 		Object.assign(artoolkitProfile.sourceParameters, additionalParameters);
@@ -91,14 +94,15 @@ export default defineComponent({
 			onResize();
 		});
 
-		// handle resize
-		window.addEventListener('resize', function () {
-			onResize();
-		});
+		// this breaks everything randomly?
+		// // handle resize
+		// window.addEventListener('resize', function () {
+		// 	onResize();
+		// });
 
 		// resize is not called for the canvas on init. The canvas with the cube seems to be resized correctly at start.
 		// Is that maybe a vue-specific problem?
-		function onResize() {
+		const onResize = () => {
 			arToolkitSource.onResizeElement();
 			arToolkitSource.copyElementSizeTo(renderer.domElement);
 			if (arToolkitContext.arController !== null) {
@@ -106,7 +110,7 @@ export default defineComponent({
 					arToolkitContext.arController.canvas,
 				);
 			}
-		}
+		};
 
 		////////////////////////////////////////////////////////////////////////////////
 		//          initialize arToolkitContext
@@ -114,15 +118,13 @@ export default defineComponent({
 
 		// create atToolkitContext
 		const arToolkitContext = new ArToolkitContext({
-			debug: true,
+			debug: false,
 			cameraParametersUrl:
 				ArToolkitContext.baseURL + 'data/camera_para.dat',
 			detectionMode: 'mono',
-			canvasWidth: 640,
-			canvasHeight: 490,
-			// canvasWidth: window.innerWidth,
-			// canvasHeight: window.innerHeight,
-			imageSmoothingEnabled: true, // There is still a warning about mozImageSmoothingEnabled when using Firefox
+			canvasWidth: 480,
+			canvasHeight: 640,
+			imageSmoothingEnabled: true,
 		});
 
 		// initialize it
@@ -171,7 +173,6 @@ export default defineComponent({
 		const axisHelper = new THREE.AxesHelper();
 		markerScene.add(axisHelper);
 
-		// TODO: models are UPSIDE DOWN
 		// create mesh loader
 		const loader = new GLTFLoader();
 		loader.load(
@@ -187,23 +188,6 @@ export default defineComponent({
 		// light the meshes
 		const light = new THREE.AmbientLight(0xffffff);
 		markerScene.add(light);
-
-		// add a torus knot
-		// const boxGeometry = new THREE.BoxGeometry(1, 1, 1);
-		// const boxMaterial = new THREE.MeshNormalMaterial({
-		// 	transparent: true,
-		// 	opacity: 0.5,
-		// 	side: THREE.DoubleSide,
-		// });
-		// const boxMesh = new THREE.Mesh(boxGeometry, boxMaterial);
-		// boxMesh.position.y = boxGeometry.parameters.height / 2;
-		// markerScene.add(boxMesh);
-
-		// var knotGeometry = new THREE.TorusKnotGeometry(0.3, 0.1, 64, 16);
-		// var knotMaterial = new THREE.MeshNormalMaterial();
-		// var knotMesh = new THREE.Mesh(knotGeometry, knotMaterial);
-		// knotMesh.position.y = 0.5;
-		// markerScene.add(knotMesh);
 
 		// onRenderFcts.push(function (delta: number) {
 		// 	knotMesh.rotation.x += delta * Math.PI;
@@ -238,15 +222,9 @@ export default defineComponent({
 	<div class="relative">
 		<!-- <div class="ar-view" id="ARScene"></div> -->
 		<aside
-			class="fixed z-10 bottom-0 left-0 w-full h-32 bg-white bg-opacity-50"
+			class="fixed z-10 top-0 left-0 w-full h-32 bg-white bg-opacity-50"
 		>
 			<span>ar controls</span>
 		</aside>
 	</div>
 </template>
-
-<style lang="postcss" scoped>
-.ar-view {
-	@apply w-full h-full absolute top-0 left-0;
-}
-</style>
