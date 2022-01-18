@@ -20,9 +20,20 @@ export default () => {
 		});
 	};
 
+	const postForm = async (url: string, data: FormData) => {
+		return fetch(url, {
+			method: 'POST',
+			headers: {
+				// 'Content-Type': 'multipart/form-data',
+			},
+			body: data,
+		});
+	};
+
 	return {
 		get,
 		post,
+		postForm,
 		URL,
 	};
 };

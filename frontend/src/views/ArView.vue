@@ -222,9 +222,7 @@ export default defineComponent({
 	<div class="relative">
 		<!-- <div class="ar-view" id="ARScene"></div> -->
 		<aside
-			class="fixed z-10 top-0 left-0 w-full h-32 bg-white bg-opacity-50"
-		>
-			<span>ar controls</span>
-		</aside>
+			class="fixed z-10 top-0 left-0 w-full h-32 bg-gray-100 bg-opacity-80"
+		></aside>
 	</div>
 </template>

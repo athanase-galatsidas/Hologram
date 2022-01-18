@@ -1,29 +1,39 @@
 <script lang="ts">
 import router from '@/bootstrap/router';
 import { defineComponent, ref } from 'vue';
-import { UploadIcon } from '@heroicons/vue/outline';
+import { UploadIcon, DocumentTextIcon } from '@heroicons/vue/outline';
+
 import useFetch from '@/composable/useFetch';
+
+import * as THREE from 'three';
+import { GLTF, GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 
 export default defineComponent({
 	name: 'Upload',
 	components: {
 		UploadIcon,
+		DocumentTextIcon,
 	},
 	setup() {
 		const file = ref<File>();
-		const { post, URL } = useFetch();
+		const fileName = ref<String>();
+		const uploadStep = ref(0);
+
+		const { postForm, URL } = useFetch();
 
 		console.log('the url is: ' + URL);
 
 		const upload = async () => {
-			if (!file.value) return;
+			// TODO: error checking
+			if (!file.value || !fileName.value) return;
 
-			const formData = {
-				name: 'a cool file',
-				file: file.value,
-			};
+			// create formdata with file
+			const formData = new FormData();
+			formData.append('file_name', fileName.value as string);
+			formData.append('uploaded_file', file.value);
 
-			await post(URL + '/v1/upload', formData)
+			// upload it
+			await postForm(URL + '/v1/upload', formData)
 				.then((res) => res.json())
 				.then((data) => {
 					console.log(data);
@@ -38,42 +48,126 @@ export default defineComponent({
 		const dragAndDropFiles = (e: DragEvent) => {
 			const files = e.dataTransfer?.files;
 
-			if (files) file.value = files.item(0) as File;
+			if (!files) return;
 
-			file.value?.name;
+			// read the file and create data url
+			const localFile = files.item(0) as File;
+			file.value = localFile;
+			fileName.value = localFile.name;
+
+			const reader = new FileReader();
+			reader.onload = (e) => {
+				console.log(e.target?.result);
+				addPreview(e.target?.result);
+			};
+
+			reader.readAsDataURL(localFile);
+
+			uploadStep.value = 1;
+		};
+
+		const addPreview = (model: any) => {
+			const container = document.querySelector('#preview') as Element;
+
+			const scene = new THREE.Scene();
+			const camera = new THREE.PerspectiveCamera(
+				60,
+				container.clientWidth / container.clientHeight,
+				0.1,
+				100,
+			);
+			scene.add(camera);
+			camera.position.z = 2;
+
+			const light = new THREE.AmbientLight(0xffffff);
+			scene.add(light);
+
+			const loader = new GLTFLoader();
+			loader.load(model, (gltf: GLTF) => {
+				gltf.scene.scale.x = 0.5;
+				gltf.scene.scale.y = 0.5;
+				gltf.scene.scale.z = 0.5;
+				scene.add(gltf.scene);
+			});
+
+			const renderer = new THREE.WebGL1Renderer();
+			renderer.setClearColor(new THREE.Color('white'), 1);
+			renderer.setSize(container.clientWidth, container.clientHeight);
+
+			container.appendChild(renderer.domElement);
+
+			const draw = () => {
+				renderer.render(scene, camera);
+				requestAnimationFrame(draw);
+			};
+
+			draw();
 		};
 
 		return {
 			upload,
 			dragAndDropFiles,
 			file,
+			fileName,
+			uploadStep,
 		};
 	},
 });
 </script>
 
 <template>
-	<div class="max-w-3xl mx-auto my-8 flex flex-col items-center">
+	<div>
 		<h1 class="text-2xl mb-8">Upload a file</h1>
+
 		<div
-			@dragover.prevent
-			@drop.prevent="dragAndDropFiles($event)"
-			class="relative text-gray-400 border-gray-400 hover:bg-gray-50 border-4 border-dashed rounded-xl w-64 h-64"
+			v-show="uploadStep == 0"
+			class="max-w-3xl mx-auto my-8 p-8 flex flex-col items-center bg-white rounded-md shadow-md"
 		>
-			<UploadIcon class="absolute left-0 bottom-2 w-full h-full p-12" />
-			<span
-				v-if="file"
-				class="absolute bottom-4 left-0 text-center text-lg font-medium w-full"
+			<h3 class="text-2xl mb-8">Pick a file</h3>
+
+			<div
+				@dragover.prevent
+				@drop.prevent="dragAndDropFiles($event)"
+				class="relative text-gray-400 border-gray-400 hover:bg-gray-50 border-4 border-dashed rounded-xl w-64 h-64"
 			>
-				{{ file.name }}
-			</span>
-			<span
-				v-else
-				class="absolute bottom-4 left-0 text-center text-lg font-medium w-full"
-			>
-				Drag .glb files to upload
-			</span>
+				<UploadIcon
+					class="absolute left-0 bottom-2 w-full h-full p-12"
+				/>
+				<span
+					class="absolute bottom-4 left-0 text-center text-lg font-medium w-full"
+				>
+					Drag .glb files to upload
+				</span>
+			</div>
 		</div>
-		<button @click="upload()" class="btn-primary my-8">Upload</button>
+
+		<div
+			v-show="uploadStep == 1"
+			class="flex justify-between max-w-3xl mx-auto my-8 p-8 bg-white rounded-md shadow-md"
+		>
+			<div id="preview" class="w-48 h-48 bg-gray-400"></div>
+
+			<form class="w-1/2 flex flex-col justify-between" @submit.prevent>
+				<div>
+					<h3 class="text-2xl mb-2">Overview</h3>
+					<div class="flex flex-col">
+						<label
+							class="text-gray-600 mb-1 flex items-center"
+							for="inpFileName"
+						>
+							filename</label
+						>
+						<input
+							class="block w-64 bg-gray-100 shadow-sm px-2 py-1 rounded-md"
+							id="inpFileName"
+							v-model="fileName"
+							type="text"
+						/>
+					</div>
+				</div>
+
+				<button @click="upload()" class="btn-primary">Upload</button>
+			</form>
+		</div>
 	</div>
 </template>
