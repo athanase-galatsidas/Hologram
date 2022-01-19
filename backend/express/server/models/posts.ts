@@ -1,7 +1,6 @@
 import { model, Schema } from 'mongoose';
 
 const schema = new Schema({
-	id: String,
 	title: String,
 	description: String,
 	file: String,

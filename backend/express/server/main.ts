@@ -24,8 +24,6 @@ app.use('/v1/posts', modelsRoute);
 app.use('/v1/upload', uploadRoute);
 
 // DB CONNECTION
-mongoose.createConnection;
-
 mongoose
 	.connect(connectionString, {
 		authSource: 'admin',

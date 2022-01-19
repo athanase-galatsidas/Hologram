@@ -1,10 +1,30 @@
 import express, { Request, Response, Router } from 'express';
-import models from '../models/posts';
+import Posts from '../models/posts';
 
 const router = Router();
 
-router.get('/', (req: Request, res: Response) => {});
+router.get('/', async (req: Request, res: Response) => {
+	const data = await Posts.find();
 
-router.get('/:id', (req: Request, res: Response) => {});
+	if (!data) {
+		res.status(404);
+		res.send(JSON.stringify({ error: 'could not find data' }));
+	}
+
+	res.status(200);
+	res.send(JSON.stringify(data));
+});
+
+router.get('/:id', async (req: Request, res: Response) => {
+	const data = await Posts.findById(req.params.id);
+
+	if (!data) {
+		res.status(404);
+		res.send(JSON.stringify({ error: 'could not find data' }));
+	}
+
+	res.status(200);
+	res.send(JSON.stringify(data));
+});
 
 export default router;

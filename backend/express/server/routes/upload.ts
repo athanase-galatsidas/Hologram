@@ -17,11 +17,17 @@ const upload = multer({ storage: storage });
 
 const router = Router();
 
-router.post('/', upload.single('uploaded_file'), (req: Request, res: Response) => {
+router.post('/', upload.single('uploaded_file'), async (req: Request, res: Response) => {
+	if (!req.body.file_name || !req.file) {
+		res.status(400);
+		res.send(JSON.stringify({ error: 'invalid request data' }));
+		return;
+	}
+
 	const newPost = new Post({
 		title: req.body.file_name,
 		// description: req.body.file_description,
-		file: req.file?.filename,
+		file: req.file.filename,
 	});
 
 	newPost
@@ -34,8 +40,8 @@ router.post('/', upload.single('uploaded_file'), (req: Request, res: Response) =
 		})
 		.catch((err: any) => {
 			console.error(err);
-
 			res.status(400);
+			res.send(JSON.stringify({ error: 'something went wrong' }));
 		});
 });
 
