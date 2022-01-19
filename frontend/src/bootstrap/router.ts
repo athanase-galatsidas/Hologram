@@ -14,25 +14,32 @@ const routes: RouteRecordRaw[] = [
 		component: () => import('@/views/Home.vue'),
 	},
 	{
-		name: 'preview',
-		path: '/preview',
-		component: () => import('@/views/Preview.vue'),
+		name: 'upload',
+		path: '/upload',
+		component: () => import('@/views/Upload.vue'),
 	},
 	{
-		name: 'ar-marker',
-		path: '/ar-marker',
-		component: () => import('@/views/ArMarker.vue'),
+		name: 'share',
+		path: '/share/:id',
+		component: () => import('@/views/Share.vue'),
+		beforeEnter(to, from, next) {
+			if (!to.params.id) next('not-found');
+			else next();
+		},
 	},
 	{
 		name: 'ar-view',
 		path: '/ar-view/:id',
 		component: () => import('@/views/ArView.vue'),
-		// TODO: if id does not exist goto 404
+		beforeEnter(to, from, next) {
+			if (!to.params.id) next('not-found');
+			else next();
+		},
 	},
 	{
-		name: 'upload',
-		path: '/upload',
-		component: () => import('@/views/Upload.vue'),
+		name: 'not-found',
+		path: '/:pathMatch(.*)*',
+		component: () => import('@/views/404.vue'),
 	},
 ];
 

@@ -1,6 +1,7 @@
 <script lang="ts">
 import router from '@/bootstrap/router';
 import { defineComponent, ref } from 'vue';
+import AppHeader from '@/components/AppHeader.vue';
 import { UploadIcon, DocumentTextIcon } from '@heroicons/vue/outline';
 
 import useFetch from '@/composable/useFetch';
@@ -13,6 +14,7 @@ export default defineComponent({
 	components: {
 		UploadIcon,
 		DocumentTextIcon,
+		AppHeader,
 	},
 	setup() {
 		const file = ref<File>();
@@ -24,7 +26,7 @@ export default defineComponent({
 		console.log('the url is: ' + URL);
 
 		const upload = async () => {
-			// TODO: error checking
+			// TODO: show error
 			if (!file.value || !fileName.value) return;
 
 			// create formdata with file
@@ -34,15 +36,18 @@ export default defineComponent({
 
 			// upload it
 			await postForm(URL + '/v1/upload', formData)
-				.then((res) => res.json())
+				.then((res) => {
+					if (!res.ok) throw new Error('Invalid request');
+					return res.json();
+				})
 				.then((data) => {
-					console.log(data);
+					if (data.error) {
+						// TODO: show error
+						return;
+					}
 
-					// TODO: error checking
-					// if (data.status == 400) return;
+					router.push({ name: 'share', params: { id: data._id } });
 				});
-
-			router.push('/ar-marker');
 		};
 
 		const dragAndDropFiles = (e: DragEvent) => {
@@ -117,7 +122,7 @@ export default defineComponent({
 
 <template>
 	<div>
-		<h1 class="text-2xl mb-8">Upload a file</h1>
+		<AppHeader title="Upload a file" />
 
 		<div
 			v-show="uploadStep == 0"
