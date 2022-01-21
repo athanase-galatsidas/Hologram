@@ -1,22 +1,37 @@
 <script lang="ts">
-import { defineComponent } from 'vue';
-import * as THREE from 'three';
-import { GLTF, GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
-import {
-	ArToolkitProfile,
-	ArToolkitSource,
-	ArToolkitContext,
-	ArMarkerControls,
-	// @ts-ignore
-} from '@ar-js-org/ar.js/three.js/build/ar-threex';
+import { defineComponent, ref } from 'vue';
 
 import router from '@/bootstrap/router';
 import useSocket from '@/composable/useSocket';
 import { useRoute } from 'vue-router';
+import useFetch from '@/composable/useFetch';
+import {
+	initAr,
+	loadModel,
+	loadModelLocal,
+	loadText,
+	turn,
+	toggleAxis,
+} from '@/modules/ArHelper';
+import {
+	AnnotationIcon,
+	LogoutIcon,
+	RefreshIcon,
+	SwitchVerticalIcon,
+} from '@heroicons/vue/outline';
 
 export default defineComponent({
 	name: 'ArView',
+	components: {
+		AnnotationIcon,
+		LogoutIcon,
+		RefreshIcon,
+		SwitchVerticalIcon,
+	},
 	setup() {
+		const isLoaded = ref(false);
+		const trayVissible = ref(false);
+
 		const { socket } = useSocket();
 		const route = useRoute();
 
@@ -24,196 +39,69 @@ export default defineComponent({
 			console.log(`received: ${payload}`);
 		});
 
-		socket.emit('comment', { id: route.params.id });
+		const annotate = () => {
+			const text = (
+				document.querySelector('#annotation') as HTMLInputElement
+			).value;
+
+			trayVissible.value = false;
+			loadText(text, 0, 0.5, 0);
+
+			socket.emit('comment', { id: route.params.id, message: text });
+		};
+
+		const toggleTray = (value: boolean) => {
+			trayVissible.value = value;
+		};
+
+		const rotate = () => {
+			turn();
+		};
+
+		const changeAxis = () => {
+			toggleAxis();
+		};
+
+		return {
+			isLoaded,
+			trayVissible,
+			annotate,
+			rotate,
+			changeAxis,
+			toggleTray,
+		};
 	},
-	mounted() {
-		// modified boilerplate code from official examples
-		// https://github.com/AR-js-org/AR.js/tree/190c3e635f467792e43427d02b17f2a43f1e44a1/three.js/examples
+	async mounted() {
+		const { get, URL } = useFetch();
+		const { params } = useRoute();
 
-		ArToolkitContext.baseURL = '/';
+		// initialize the ar scene
+		initAr();
 
-		// init renderer
-		const renderer = new THREE.WebGLRenderer({
-			antialias: true,
-			alpha: true,
+		loadModelLocal('cube', () => {
+			this.isLoaded = true;
 		});
 
-		renderer.setClearColor(new THREE.Color('lightgrey'), 0);
-		// renderer.setPixelRatio( 2 );
-		renderer.setSize(window.innerWidth, window.innerHeight);
-		renderer.domElement.style.position = 'absolute';
-		renderer.domElement.style.top = '0px';
-		renderer.domElement.style.left = '0px';
-		// renderer.domElement.classList.add('ar-content');
-		document.body.appendChild(renderer.domElement); // We should be able to specify an html element to append AR.js related elements to.
-		// document.querySelector('#ARScene')?.appendChild(renderer.domElement);
+		// TODO: does not work with https
+		// loadModel(
+		// 	'http://192.168.1.60:3001/public/EXzgWgHgTqXpg9QXs0TEx.glb',
+		// 	() => {
+		// 		this.isLoaded = false;
+		// 	},
+		// );
 
-		// array of functions for the rendering loop
-		const onRenderFcts: any = [];
+		// await get(`${URL}/v1/posts/${params.id}`)
+		// 	.then((res) => {
+		// 		if (res.ok) return res.json();
+		// 		else router.push('not-found'); // if the model does not exist: go to 404 page
+		// 	})
+		// 	.then((data) => {
+		// 		console.log(`${URL}/public/${data.file}`);
 
-		// init scene and camera
-		const scene = new THREE.Scene();
-
-		//////////////////////////////////////////////////////////////////////////////////
-		//		Initialize a basic camera
-		//////////////////////////////////////////////////////////////////////////////////
-
-		// Create a camera
-		const camera = new THREE.Camera();
-		scene.add(camera);
-		const artoolkitProfile = new ArToolkitProfile();
-		artoolkitProfile.sourceWebcam(); // Is there good reason for having a function to set the sourceWebcam but not the displayWidth/Height etc?
-
-		// update & store camera position
-		onRenderFcts.push(function () {
-			console.log(
-				`x: ${camera.position.x}, y: ${camera.position.y}, z: ${camera.position.z}`,
-			);
-		});
-
-		// add existing parameters, this is not well documented
-		const additionalParameters = {
-			// Device id of the camera to use (optional)
-			deviceId: null,
-			// resolution of at which we initialize in the source image
-			sourceWidth: 480,
-			sourceHeight: 640,
-			// resolution displayed for the source
-			displayWidth: 480,
-			displayHeight: 640,
-		};
-
-		Object.assign(artoolkitProfile.sourceParameters, additionalParameters);
-		console.log(artoolkitProfile.sourceParameters); // now includes the additionalParameters
-
-		const arToolkitSource = new ArToolkitSource(
-			artoolkitProfile.sourceParameters,
-		);
-
-		arToolkitSource.init(function onReady() {
-			onResize();
-		});
-
-		// this breaks everything randomly?
-		// // handle resize
-		// window.addEventListener('resize', function () {
-		// 	onResize();
-		// });
-
-		// resize is not called for the canvas on init. The canvas with the cube seems to be resized correctly at start.
-		// Is that maybe a vue-specific problem?
-		const onResize = () => {
-			arToolkitSource.onResizeElement();
-			arToolkitSource.copyElementSizeTo(renderer.domElement);
-			if (arToolkitContext.arController !== null) {
-				arToolkitSource.copyElementSizeTo(
-					arToolkitContext.arController.canvas,
-				);
-			}
-		};
-
-		////////////////////////////////////////////////////////////////////////////////
-		//          initialize arToolkitContext
-		////////////////////////////////////////////////////////////////////////////////
-
-		// create atToolkitContext
-		const arToolkitContext = new ArToolkitContext({
-			debug: false,
-			cameraParametersUrl:
-				ArToolkitContext.baseURL + 'data/camera_para.dat',
-			detectionMode: 'mono',
-			canvasWidth: 480,
-			canvasHeight: 640,
-			imageSmoothingEnabled: true,
-		});
-
-		// initialize it
-		arToolkitContext.init(function onCompleted() {
-			// copy projection matrix to camera
-			camera.projectionMatrix.copy(
-				arToolkitContext.getProjectionMatrix(),
-			);
-		});
-
-		// update artoolkit on every frame
-		onRenderFcts.push(function () {
-			if (arToolkitSource.ready === false) return;
-
-			arToolkitContext.update(arToolkitSource.domElement);
-		});
-
-		////////////////////////////////////////////////////////////////////////////////
-		//          Create a ArMarkerControls
-		////////////////////////////////////////////////////////////////////////////////
-
-		const markerGroup = new THREE.Group();
-		scene.add(markerGroup);
-
-		const markerControls = new ArMarkerControls(
-			arToolkitContext,
-			markerGroup,
-			{
-				type: 'pattern',
-				patternUrl: ArToolkitContext.baseURL + 'data/patt.hiro',
-				smooth: true,
-				smoothCount: 5,
-				smoothTolerance: 0.01,
-				smoothThreshold: 2,
-			},
-		);
-
-		//////////////////////////////////////////////////////////////////////////////////
-		//		add an object in the scene
-		//////////////////////////////////////////////////////////////////////////////////
-
-		const markerScene = new THREE.Scene();
-		markerGroup.add(markerScene);
-
-		// debug mesh
-		const axisHelper = new THREE.AxesHelper();
-		markerScene.add(axisHelper);
-
-		// create mesh loader
-		const loader = new GLTFLoader();
-		loader.load(
-			ArToolkitContext.baseURL + 'data/asset.glb',
-			(gltf: GLTF) => {
-				gltf.scene.scale.x = 0.5;
-				gltf.scene.scale.y = 0.5;
-				gltf.scene.scale.z = 0.5;
-				markerScene.add(gltf.scene);
-			},
-		);
-
-		// light the meshes
-		const light = new THREE.AmbientLight(0xffffff);
-		markerScene.add(light);
-
-		// onRenderFcts.push(function (delta: number) {
-		// 	knotMesh.rotation.x += delta * Math.PI;
-		// });
-
-		//////////////////////////////////////////////////////////////////////////////////
-		//		render the whole thing on the page
-		//////////////////////////////////////////////////////////////////////////////////
-		onRenderFcts.push(function () {
-			renderer.render(scene, camera);
-		});
-
-		// run the rendering loop
-		let lastTimeMsec: number | null = null;
-		requestAnimationFrame(function animate(nowMsec) {
-			// keep looping
-			requestAnimationFrame(animate);
-			// measure time
-			lastTimeMsec = lastTimeMsec || nowMsec - 1000 / 60;
-			let deltaMsec = Math.min(200, nowMsec - lastTimeMsec);
-			lastTimeMsec = nowMsec;
-			// call each update function
-			onRenderFcts.forEach(function (onRenderFct: any) {
-				onRenderFct(deltaMsec / 1000, nowMsec / 1000);
-			});
-		});
+		// 		loadModel(`${URL}/public/${data.file}`, () => {
+		// 			this.isLoaded = true;
+		// 		});
+		// 	});
 	},
 });
 </script>
@@ -221,8 +109,63 @@ export default defineComponent({
 <template>
 	<div class="relative">
 		<!-- <div class="ar-view" id="ARScene"></div> -->
-		<aside
-			class="fixed z-10 top-0 left-0 w-full h-32 bg-gray-100 bg-opacity-80"
-		></aside>
+		<div
+			class="flex justify-around items-center fixed z-10 top-0 left-0 w-screen h-16 bg-gray-100 bg-opacity-80 text-neutral-800"
+			v-show="!trayVissible"
+		>
+			<button
+				class="bg-primary active:opacity-50 hover:opacity-25 text-white w-12 h-12 p-3 rounded-md shadow-sm"
+				@click="toggleTray(true)"
+			>
+				<AnnotationIcon />
+			</button>
+
+			<button
+				class="bg-primary active:opacity-50 hover:opacity-25 text-white w-12 h-12 p-3 rounded-md shadow-sm"
+				@click="rotate()"
+			>
+				<RefreshIcon />
+			</button>
+
+			<button
+				class="bg-primary active:opacity-50 hover:opacity-25 text-white w-12 h-12 p-3 rounded-md shadow-sm"
+				@click="changeAxis()"
+			>
+				<SwitchVerticalIcon />
+			</button>
+
+			<router-link
+				to="/"
+				class="bg-secondary active:opacity-50 hover:opacity-25 text-white w-12 h-12 p-3 rounded-md shadow-sm"
+			>
+				<LogoutIcon />
+			</router-link>
+		</div>
+
+		<div
+			class="flex justify-between items-center fixed z-10 top-0 left-0 w-screen h-16 bg-gray-100 bg-opacity-80 text-neutral-800"
+			v-show="trayVissible"
+		>
+			<input
+				type="text"
+				class="w-full h-12 mx-2 px-2 rounded-md shadow-sm"
+				placeholder="annotation"
+				id="annotation"
+			/>
+			<button
+				class="bg-primary active:opacity-50 mr-2 hover:opacity-25 text-white w-12 h-12 p-3 rounded-md shadow-sm"
+				@click="annotate()"
+			>
+				<AnnotationIcon />
+			</button>
+		</div>
+
+		<!-- loading screen -->
+		<div
+			v-show="!isLoaded"
+			class="flex justify-center items-center fixed top-0 left-0 z-50 w-screen h-screen bg-black bg-opacity-50"
+		>
+			<span>loading assets, please wait</span>
+		</div>
 	</div>
 </template>

@@ -6,6 +6,10 @@
 	.bg-primary {
 		@apply bg-gradient-to-r from-cyan-400 to-emerald-400;
 	}
+
+	.bg-secondary {
+		@apply bg-gradient-to-r from-orange-400 to-red-400;
+	}
 }
 
 @layer components {

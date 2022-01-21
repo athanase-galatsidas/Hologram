@@ -1,6 +1,9 @@
 import express, { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
+import https from 'https';
+import fs from 'fs';
+import path from 'path';
 import 'dotenv/config';
 
 import uploadRoute from './routes/upload';
@@ -9,6 +12,12 @@ import modelsRoute from './routes/posts';
 // APP SETUP
 const app = express();
 const port = process.env.PORT || 3001;
+
+// const httpsOptions = {
+// 	cert: fs.readFileSync(path.join(__dirname, 'ssl', 'server.crt')),
+// 	key: fs.readFileSync(path.join(__dirname, 'ssl', 'server.key')),
+// };
+// const server = https.createServer(httpsOptions, app);
 
 const connectionString = process.env.CONNECTION_STRING as string;
 const dbUser = process.env.DB_USER;
@@ -41,6 +50,6 @@ mongoose
 	});
 
 // APP START
-app.listen(port, () => {
+app.listen(port as number, '0.0.0.0', () => {
 	console.info(`Server listening on http://localhost:${port}/`);
 });
