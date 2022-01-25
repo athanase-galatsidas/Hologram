@@ -20,14 +20,18 @@ export default defineComponent({
 		const file = ref<File>();
 		const fileName = ref<String>();
 		const uploadStep = ref(0);
+		const invalidFile = ref(false);
+		const invalidInput = ref(false);
 
 		const { postForm, URL } = useFetch();
 
 		console.log('the url is: ' + URL);
 
 		const upload = async () => {
-			// TODO: show error
-			if (!file.value || !fileName.value) return;
+			if (!file.value || !fileName.value) {
+				invalidInput.value = true;
+				return;
+			}
 
 			// create formdata with file
 			const formData = new FormData();
@@ -42,7 +46,7 @@ export default defineComponent({
 				})
 				.then((data) => {
 					if (data.error) {
-						// TODO: show error
+						invalidInput.value = true;
 						return;
 					}
 
@@ -53,13 +57,28 @@ export default defineComponent({
 		const dragAndDropFiles = (e: DragEvent) => {
 			const files = e.dataTransfer?.files;
 
-			if (!files) return;
+			if (!files) {
+				invalidFile.value = true;
+				return;
+			}
 
 			// read the file and create data url
 			const localFile = files.item(0) as File;
+
+			// error checking
+			if (
+				!localFile.name.endsWith('.glb') &&
+				!localFile.name.endsWith('.gltf')
+			) {
+				invalidFile.value = true;
+				console.log('INVALID FILE');
+				return;
+			}
+
 			file.value = localFile;
 			fileName.value = localFile.name;
 
+			// read the file and create data url
 			const reader = new FileReader();
 			reader.onload = (e) => {
 				console.log(e.target?.result);
@@ -115,6 +134,8 @@ export default defineComponent({
 			file,
 			fileName,
 			uploadStep,
+			invalidFile,
+			invalidInput,
 		};
 	},
 });
@@ -133,16 +154,21 @@ export default defineComponent({
 			<div
 				@dragover.prevent
 				@drop.prevent="dragAndDropFiles($event)"
+				:class="{
+					'border-red-400 text-red-400 bg-red-100 hover:bg-red-50':
+						invalidFile,
+				}"
 				class="relative text-gray-400 border-gray-400 hover:bg-gray-50 border-4 border-dashed rounded-xl w-64 h-64"
 			>
 				<UploadIcon
 					class="absolute left-0 bottom-2 w-full h-full p-12"
 				/>
-				<span
+				<div
 					class="absolute bottom-4 left-0 text-center text-lg font-medium w-full"
 				>
-					Drag .glb files to upload
-				</span>
+					<span v-if="!invalidFile"> Drag .glb files to upload </span>
+					<span v-else>Must be valid <b>.glb</b> file! </span>
+				</div>
 			</div>
 		</div>
 
@@ -158,12 +184,16 @@ export default defineComponent({
 					<div class="flex flex-col">
 						<label
 							class="text-gray-600 mb-1 flex items-center"
+							:class="{ 'text-red-400 ': invalidInput }"
 							for="inpFileName"
 						>
 							filename</label
 						>
 						<input
 							class="block w-64 bg-gray-100 shadow-sm px-2 py-1 rounded-md"
+							:class="{
+								'text-red-400 bg-red-100 ': invalidInput,
+							}"
 							id="inpFileName"
 							v-model="fileName"
 							type="text"

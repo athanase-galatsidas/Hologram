@@ -37,6 +37,8 @@ export default defineComponent({
 
 		socket.on(`comment:${route.params.id}`, (payload: any) => {
 			console.log(`received: ${payload}`);
+
+			// TODO: display incomming annotations
 		});
 
 		const annotate = () => {
@@ -47,7 +49,13 @@ export default defineComponent({
 			trayVissible.value = false;
 			loadText(text, 0, 0.5, 0);
 
-			socket.emit('comment', { id: route.params.id, message: text });
+			socket.emit('annotation', {
+				id: route.params.id,
+				message: text,
+				x: 0.0,
+				y: 0.0,
+				z: 0.0,
+			});
 		};
 
 		const toggleTray = (value: boolean) => {
@@ -78,30 +86,22 @@ export default defineComponent({
 		// initialize the ar scene
 		initAr();
 
-		loadModelLocal('cube', () => {
-			this.isLoaded = true;
-		});
+		// loadModelLocal('cube', () => {
+		// 	this.isLoaded = true;
+		// });
 
-		// TODO: does not work with https
-		// loadModel(
-		// 	'http://192.168.1.60:3001/public/EXzgWgHgTqXpg9QXs0TEx.glb',
-		// 	() => {
-		// 		this.isLoaded = false;
-		// 	},
-		// );
+		await get(`${URL}/v1/posts/${params.id}`)
+			.then((res) => {
+				if (res.ok) return res.json();
+				else router.push('not-found'); // if the model does not exist: go to 404 page
+			})
+			.then((data) => {
+				console.log(`${URL}/public/${data.file}`);
 
-		// await get(`${URL}/v1/posts/${params.id}`)
-		// 	.then((res) => {
-		// 		if (res.ok) return res.json();
-		// 		else router.push('not-found'); // if the model does not exist: go to 404 page
-		// 	})
-		// 	.then((data) => {
-		// 		console.log(`${URL}/public/${data.file}`);
-
-		// 		loadModel(`${URL}/public/${data.file}`, () => {
-		// 			this.isLoaded = true;
-		// 		});
-		// 	});
+				loadModel(`${URL}/public/${data.file}`, () => {
+					this.isLoaded = true;
+				});
+			});
 	},
 });
 </script>

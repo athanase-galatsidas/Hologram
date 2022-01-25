@@ -2,7 +2,6 @@ import { model, Schema } from 'mongoose';
 
 const schema = new Schema({
 	title: String,
-	description: String,
 	file: String,
 	date: {
 		type: Date,
