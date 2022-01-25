@@ -19,8 +19,11 @@ export default defineComponent({
 	setup() {
 		const posts = ref<IPost[]>();
 
+		const demo = false;
+
 		return {
 			posts,
+			demo,
 		};
 	},
 	async mounted() {
@@ -44,7 +47,7 @@ export default defineComponent({
 		</AppHeader>
 
 		<div
-			v-if="posts && posts?.length > 0"
+			v-if="demo && posts && posts?.length > 0"
 			class="max-w-3xl mt-8 flex content-start flex-wrap mx-auto"
 		>
 			<Post v-for="(value, key) of posts" :key="key" :post="value" />

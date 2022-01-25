@@ -8,6 +8,7 @@ const schema = new Schema({
 		type: Date,
 		default: Date.now(),
 	},
+	annotations: [],
 });
 
 export default model('Posts', schema);

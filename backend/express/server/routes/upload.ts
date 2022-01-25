@@ -2,7 +2,7 @@ import express, { Request, Response, Router } from 'express';
 import multer, { diskStorage } from 'multer';
 import { nanoid } from 'nanoid';
 import { extname } from 'path';
-import Post from '../models/posts';
+import Post from '../models/post';
 
 const storage = multer.diskStorage({
 	destination: (req, file, callback) => {
@@ -17,6 +17,7 @@ const upload = multer({ storage: storage });
 
 const router = Router();
 
+// saves uploaded file and create a new post
 router.post('/', upload.single('uploaded_file'), async (req: Request, res: Response) => {
 	if (!req.body.file_name || !req.file) {
 		res.status(400);
@@ -26,7 +27,6 @@ router.post('/', upload.single('uploaded_file'), async (req: Request, res: Respo
 
 	const newPost = new Post({
 		title: req.body.file_name,
-		// description: req.body.file_description,
 		file: req.file.filename,
 	});
 

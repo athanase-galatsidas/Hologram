@@ -1,6 +1,8 @@
 import express, { Request, Response } from 'express';
 import { Server, Socket } from 'socket.io';
 import { createServer } from 'http';
+import axios from 'axios';
+import 'dotenv/config';
 
 import cors from 'cors';
 
@@ -15,7 +17,7 @@ const io = new Server(httpServer, {
 	},
 });
 
-const url = `ws://localhost:${port}`;
+const url = process.env.API_URL;
 
 // MIDDLEWARE
 app.use(express.json());
@@ -36,16 +38,25 @@ io.on('connection', (socket: Socket) => {
 		console.log(err.context);
 	});
 
-	socket.on('comment', (payload: any) => {
-		// socket.emit(`comment:${payload.id}`, 'test');
+	socket.on('annotation', (payload: any) => {
 		console.log(`received: ${payload.id}`);
 
-		io.sockets.emit(`comment:${payload.id}`, 'test');
-		io.sockets.emit('test', 'this is a test');
+		axios
+			.post(url + '/v1/annotations', {
+				id: payload.id,
+				message: payload.message,
+				x: payload.x,
+				y: payload.y,
+				z: payload.z,
+			})
+			.then((res) => {
+				console.log(res.data);
+				io.sockets.emit(`annotation:${payload.id}`, res.data);
+			});
 	});
 });
 
 // START
 httpServer.listen(port, () => {
-	console.info(`\nServer listening on ${url}`);
+	console.info(`\nServer listening on ws://localhost:${port}`);
 });

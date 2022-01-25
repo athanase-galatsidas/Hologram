@@ -6,18 +6,13 @@ import fs from 'fs';
 import path from 'path';
 import 'dotenv/config';
 
+import annotationRoute from './routes/annotations';
 import uploadRoute from './routes/upload';
 import modelsRoute from './routes/posts';
 
 // APP SETUP
 const app = express();
 const port = process.env.PORT || 3001;
-
-// const httpsOptions = {
-// 	cert: fs.readFileSync(path.join(__dirname, 'ssl', 'server.crt')),
-// 	key: fs.readFileSync(path.join(__dirname, 'ssl', 'server.key')),
-// };
-// const server = https.createServer(httpsOptions, app);
 
 const connectionString = process.env.CONNECTION_STRING as string;
 const dbUser = process.env.DB_USER;
@@ -30,6 +25,7 @@ app.use(cors());
 
 // ROUTES
 app.use('/v1/posts', modelsRoute);
+app.use('/v1/annotations', annotationRoute);
 app.use('/v1/upload', uploadRoute);
 
 // DB CONNECTION

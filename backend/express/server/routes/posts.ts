@@ -1,5 +1,5 @@
 import express, { Request, Response, Router } from 'express';
-import Posts from '../models/posts';
+import Posts from '../models/post';
 
 const router = Router();
 
@@ -9,6 +9,7 @@ router.get('/', async (req: Request, res: Response) => {
 	if (!data) {
 		res.status(404);
 		res.send(JSON.stringify({ error: 'could not find data' }));
+		return;
 	}
 
 	res.status(200);
