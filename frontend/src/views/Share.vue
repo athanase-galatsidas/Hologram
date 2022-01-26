@@ -4,26 +4,37 @@ import AppHeader from '@/components/AppHeader.vue';
 import useFetch from '@/composable/useFetch';
 import { useRoute } from 'vue-router';
 import { toCanvas } from 'qrcode';
+import { ClipboardIcon, ClipboardCheckIcon } from '@heroicons/vue/outline';
 
 export default defineComponent({
 	name: 'Share',
 	components: {
 		AppHeader,
+		ClipboardIcon,
+		ClipboardCheckIcon,
 	},
 	setup() {
 		const { params } = useRoute();
-		const link = `${window.location.origin}/ar-view/${params.id}`;
+		const link = `${window.location.origin}/share/${params.id}`;
 
 		const visible = ref(false);
+		const copied = ref(false);
 
 		const toggleView = (show: boolean) => {
 			visible.value = show;
+		};
+
+		const copyLink = () => {
+			navigator.clipboard.writeText(link);
+			copied.value = true;
 		};
 
 		return {
 			link,
 			visible,
 			toggleView,
+			copied,
+			copyLink,
 		};
 	},
 	mounted() {
@@ -49,7 +60,24 @@ export default defineComponent({
 			>
 				<canvas id="qr"></canvas>
 			</div>
-			<span>{{ link }}</span>
+
+			<div class="w-64 my-4 flex justify-between">
+				<input
+					class="bg-white w-52 p-2 mr-2 rounded-md shadow-md"
+					id="linkInput"
+					type="text"
+					:value="link"
+					readonly
+				/>
+				<button
+					class="bg-primary text-white p-2 flex w-10 h-10 rounded-md shadow-md"
+					title="copy to clipboard"
+					@click="copyLink"
+				>
+					<ClipboardCheckIcon v-show="copied" />
+					<ClipboardIcon v-show="!copied" />
+				</button>
+			</div>
 
 			<button @click="toggleView(true)" class="btn-primary mt-8">
 				Next

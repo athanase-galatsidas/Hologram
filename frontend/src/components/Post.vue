@@ -20,7 +20,7 @@ export default defineComponent({
 
 <template>
 	<div
-		class="flex flex-col justify-end items-center w-60 h-64 mx-2 mb-4 flex-grow-0 bg-white shadow-md rounded-md p-4"
+		class="flex flex-col justify-end items-center w-60 h-64 mx-2 mb-4 flex-grow-0 bg-white shadow-md rounded-md p-4 cursor-pointer"
 	>
 		<figure class="h-44 w-full">
 			<!-- TODO: thumbnails -->

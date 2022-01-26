@@ -7,6 +7,7 @@ import { UploadIcon } from '@heroicons/vue/outline';
 
 import useFetch from '@/composable/useFetch';
 import { Post as IPost } from '@/interfaces/Post';
+import router from '@/bootstrap/router';
 
 export default defineComponent({
 	name: 'Home',
@@ -19,8 +20,13 @@ export default defineComponent({
 	setup() {
 		const posts = ref<IPost[]>();
 
+		const openPost = (id: string) => {
+			router.push({ name: 'share', params: { id: id } });
+		};
+
 		return {
 			posts,
+			openPost,
 		};
 	},
 	async mounted() {
@@ -47,7 +53,12 @@ export default defineComponent({
 			v-if="posts && posts?.length > 0"
 			class="max-w-3xl mt-8 flex content-start flex-wrap mx-auto"
 		>
-			<Post v-for="(value, key) of posts" :key="key" :post="value" />
+			<Post
+				v-for="(value, key) of posts"
+				:key="key"
+				:post="value"
+				@click="openPost(value._id)"
+			/>
 		</div>
 		<div v-else class="max-w-3xl mt-8 flex content-start flex-wrap mx-auto">
 			<PostSkeleton v-for="i in 12" :key="i" />
