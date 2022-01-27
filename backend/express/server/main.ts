@@ -5,6 +5,7 @@ import https from 'https';
 import fs from 'fs';
 import path from 'path';
 import 'dotenv/config';
+import { seed } from './seeders/dataseeder';
 
 import annotationRoute from './routes/annotations';
 import uploadRoute from './routes/upload';
@@ -37,8 +38,10 @@ mongoose
 		keepAlive: true,
 		keepAliveInitialDelay: 300000,
 	})
-	.then((res: any) => {
+	.then(async (res: any) => {
 		console.info('db connected');
+
+		await seed();
 	})
 	.catch((err: any) => {
 		console.error('db failed to connected');
