@@ -17,7 +17,7 @@ const port = process.env.PORT || 3001;
 
 const connectionString = process.env.CONNECTION_STRING as string;
 const dbUser = process.env.DB_USER;
-const dbPassword = process.env.DB_Pass;
+const dbPassword = process.env.DB_PASS;
 
 // MIDDLEWARE
 app.use(express.json()); // for parsing application/json

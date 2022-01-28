@@ -1,5 +1,12 @@
 services:
     # frontend services
+    frontend:
+        build:
+            context: ./frontend
+        ports:
+            - 80:80
+        env_file:
+            - .env
 
     # backend services
     db:
@@ -16,6 +23,7 @@ services:
 
     mongo-express:
         image: mongo-express:1.0.0-alpha
+        restart: always
         ports:
             - 8081:8081
         # networks:
@@ -24,3 +32,25 @@ services:
             - .env
         depends_on:
             - db
+
+    express:
+        build:
+            context: ./backend/express
+        ports:
+            - 3001:3001
+        env_file:
+            - .env
+        depends_on:
+            - db
+        volumes:
+            - ./.public:/dist/public
+
+    socket:
+        build:
+            context: ./backend/socket
+        ports:
+            - 3002:3002
+        env_file:
+            - .env
+        depends_on:
+            - express
