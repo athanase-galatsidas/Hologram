@@ -15,7 +15,7 @@ export default defineComponent({
 	},
 	setup() {
 		const { params } = useRoute();
-		const link = `${window.location.origin}/share/${params.id}`;
+		const link = `${window.location.origin}/ar-view/${params.id}`;
 
 		const visible = ref(false);
 		const copied = ref(false);

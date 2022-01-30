@@ -39,7 +39,7 @@ io.on('connection', (socket: Socket) => {
 	});
 
 	socket.on('annotation', (payload: any) => {
-		console.log(`received: ${payload.id}`);
+		console.log(`received: ${payload.id}, ${payload.message}`);
 
 		axios
 			.post(url + '/v1/annotations', {

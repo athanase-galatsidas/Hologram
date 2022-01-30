@@ -108,13 +108,10 @@ export default defineComponent({
 
 			const loader = new GLTFLoader();
 			loader.load(model, (gltf: GLTF) => {
-				gltf.scene.scale.x = 0.5;
-				gltf.scene.scale.y = 0.5;
-				gltf.scene.scale.z = 0.5;
 				scene.add(gltf.scene);
 			});
 
-			const renderer = new THREE.WebGL1Renderer();
+			const renderer = new THREE.WebGLRenderer();
 			renderer.setClearColor(new THREE.Color('white'), 1);
 			renderer.setSize(container.clientWidth, container.clientHeight);
 

@@ -3,6 +3,7 @@ import multer, { diskStorage } from 'multer';
 import { nanoid } from 'nanoid';
 import { extname } from 'path';
 import Post from '../models/post';
+import { render } from '../modules/thumbnailRenderer';
 
 const storage = multer.diskStorage({
 	destination: (req, file, callback) => {
@@ -29,6 +30,11 @@ router.post('/', upload.single('uploaded_file'), async (req: Request, res: Respo
 		title: req.body.file_name,
 		file: req.file.filename,
 	});
+
+	// render(
+	// 	`public/${req.file.filename}`,
+	// 	`public/${req.file.filename.substring(0, req.file.filename.length - extname(req.file.filename).length)}.png`,
+	// );
 
 	newPost
 		.save()

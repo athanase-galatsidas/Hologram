@@ -12,6 +12,7 @@ import {
 	loadText,
 	turn,
 	toggleAxis,
+	position,
 } from '@/modules/ArHelper';
 import {
 	AnnotationIcon,
@@ -38,7 +39,7 @@ export default defineComponent({
 		socket.on(`comment:${route.params.id}`, (payload: any) => {
 			console.log(`received: ${payload}`);
 
-			// TODO: display incomming annotations
+			loadText(payload.message, payload.x, payload.y, payload.z);
 		});
 
 		const annotate = () => {
@@ -47,7 +48,8 @@ export default defineComponent({
 			).value;
 
 			trayVissible.value = false;
-			loadText(text, 0, 0.5, 0);
+			const pos = position();
+			loadText(text, pos.x, pos.y, pos.z);
 
 			socket.emit('annotation', {
 				id: route.params.id,
@@ -96,10 +98,14 @@ export default defineComponent({
 				else router.push('not-found'); // if the model does not exist: go to 404 page
 			})
 			.then((data) => {
-				console.log(`${URL}/public/${data.file}`);
-
+				// load model
 				loadModel(`${URL}/public/${data.file}`, () => {
 					this.isLoaded = true;
+				});
+
+				// load annotations
+				data.annotations.forEach((element: any) => {
+					loadText(element.message, element.x, element.y, element.z);
 				});
 			});
 	},

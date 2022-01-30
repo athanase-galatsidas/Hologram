@@ -12,6 +12,7 @@ import {
 
 const markerScene = new THREE.Scene();
 let axisToggle = false;
+let cam: THREE.Camera;
 
 const initAr = () => {
 	// modified boilerplate code from official examples
@@ -47,6 +48,7 @@ const initAr = () => {
 
 	// Create a camera
 	const camera = new THREE.Camera();
+	cam = camera;
 	scene.add(camera);
 	const artoolkitProfile = new ArToolkitProfile();
 	artoolkitProfile.sourceWebcam(); // Is there good reason for having a function to set the sourceWebcam but not the displayWidth/Height etc?
@@ -238,7 +240,44 @@ const loadText = (text: string, x: number, y: number, z: number) => {
 		textMesh.position.z = z;
 
 		markerScene.add(textMesh);
+
+		// add a line
+		const points = [new THREE.Vector3(0, 0, 0), new THREE.Vector3(x, y, z)];
+		const lineMat = new THREE.LineBasicMaterial({ color: 0xdddddd });
+		const lineGeometry = new THREE.BufferGeometry().setFromPoints(points);
+		const line = new THREE.Line(lineGeometry, lineMat);
+
+		markerScene.add(line);
 	});
+};
+
+const position = () => {
+	if (!cam) {
+		console.error('trying to read position before init');
+	}
+
+	// get position
+	let x = cam.position.x;
+	let y = cam.position.y;
+	let z = cam.position.z;
+
+	// add random variation to avoid overlap
+	x += Math.random();
+	y += Math.random();
+	z += Math.random();
+
+	// get unit vector, used to make annotations appear in a sphere around the centre and not go too far out
+	const magnitude = Math.sqrt(x * x + y * y + z * z);
+	x = x / magnitude + 0.5;
+	y = x / magnitude + 0.5;
+	z = x / magnitude + 0.5;
+
+	// return everything
+	return {
+		x,
+		y,
+		z,
+	};
 };
 
 const turn = () => {
@@ -252,4 +291,12 @@ const toggleAxis = () => {
 	else markerScene.rotation.z = -Math.PI / 4; // 45°
 };
 
-export { initAr, loadModel, loadModelLocal, loadText, turn, toggleAxis };
+export {
+	initAr,
+	loadModel,
+	loadModelLocal,
+	loadText,
+	turn,
+	toggleAxis,
+	position,
+};
