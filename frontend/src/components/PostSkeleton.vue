@@ -9,7 +9,7 @@ export default defineComponent({
 
 <template>
 	<div
-		class="w-60 h-64 m-2 flex-grow-0 bg-gray-50 shadow-md rounded-md pulse"
+		class="w-full h-16 m-2 flex-grow-0 bg-gray-50 shadow-md rounded-md pulse"
 	></div>
 </template>
 

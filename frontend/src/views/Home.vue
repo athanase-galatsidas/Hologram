@@ -51,7 +51,7 @@ export default defineComponent({
 
 		<div
 			v-if="posts && posts?.length > 0"
-			class="max-w-3xl mt-8 flex content-start flex-wrap mx-auto"
+			class="max-w-3xl mt-8 flex flex-col mx-auto"
 		>
 			<Post
 				v-for="(value, key) of posts"
@@ -60,7 +60,7 @@ export default defineComponent({
 				@click="openPost(value._id)"
 			/>
 		</div>
-		<div v-else class="max-w-3xl mt-8 flex content-start flex-wrap mx-auto">
+		<div v-else class="max-w-3xl mt-8 flex flex-col mx-auto">
 			<PostSkeleton v-for="i in 12" :key="i" />
 		</div>
 	</div>
