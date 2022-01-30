@@ -47,64 +47,78 @@ export default defineComponent({
 	<div>
 		<AppHeader title="Share your creation"></AppHeader>
 
-		<section
-			v-show="!visible"
-			class="max-w-3xl mx-auto my-8 flex flex-col items-center"
+		<div
+			class="absolute w-screen transition-transform duration-500"
+			:class="{ 'move-right': visible }"
 		>
-			<h3 class="text-2xl mb-8">
-				Scan this code with an AR-capable mobile device.
-			</h3>
-
-			<div
-				class="bg-white w-64 h-64 overflow-hidden rounded-md shadow-md"
+			<section
+				class="max-w-3xl mx-auto my-8 p-8 flex flex-col items-center bg-white rounded-md shadow-md"
 			>
-				<canvas id="qr"></canvas>
-			</div>
+				<h3 class="text-2xl mb-8">
+					Scan this code with an AR-capable mobile device.
+				</h3>
 
-			<div class="w-64 my-4 flex justify-between">
-				<input
-					class="bg-white w-52 p-2 mr-2 rounded-md shadow-md"
-					id="linkInput"
-					type="text"
-					:value="link"
-					readonly
-				/>
-				<button
-					class="bg-primary text-white p-2 flex w-10 h-10 rounded-md shadow-md"
-					title="copy to clipboard"
-					@click="copyLink"
-				>
-					<ClipboardCheckIcon v-show="copied" />
-					<ClipboardIcon v-show="!copied" />
+				<div class="w-64 h-64 overflow-hidden">
+					<canvas id="qr"></canvas>
+				</div>
+
+				<div class="w-64 my-4 flex justify-between">
+					<input
+						class="bg-gray-100 shadow-sm w-52 p-2 mr-2 rounded-md"
+						id="linkInput"
+						type="text"
+						:value="link"
+						readonly
+					/>
+					<button
+						class="bg-primary text-white p-2 flex w-10 h-10 rounded-md shadow-sm"
+						title="copy to clipboard"
+						@click="copyLink"
+					>
+						<ClipboardCheckIcon v-show="copied" />
+						<ClipboardIcon v-show="!copied" />
+					</button>
+				</div>
+
+				<button @click="toggleView(true)" class="btn-primary mt-8">
+					Next
 				</button>
-			</div>
+			</section>
+		</div>
 
-			<button @click="toggleView(true)" class="btn-primary mt-8">
-				Next
-			</button>
-		</section>
-
-		<section
-			v-show="visible"
-			class="max-w-3xl mx-auto my-8 flex flex-col items-center"
+		<div
+			class="absolute w-screen transition-transform duration-500"
+			:class="{ 'move-left': !visible }"
 		>
-			<h3 class="text-2xl">Scan this marker to view the model</h3>
+			<section
+				class="max-w-3xl mx-auto my-8 p-8 flex flex-col items-center bg-white rounded-md shadow-md"
+			>
+				<h3 class="text-2xl">Scan this marker to view the model</h3>
 
-			<button @click="toggleView(false)" class="btn-primary my-8">
-				Back
-			</button>
+				<img
+					class="w-128 h-128 my-8"
+					src="@/assets/hiro.png"
+					alt="could not load image"
+				/>
 
-			<img
-				class="w-128 h-128 shadow-md"
-				src="@/assets/hiro.png"
-				alt="could not load image"
-			/>
-		</section>
+				<button @click="toggleView(false)" class="btn-primary">
+					Back
+				</button>
+			</section>
+		</div>
 	</div>
 </template>
 
 <style lang="postcss" scoped>
 #qr {
 	@apply w-full h-full !important;
+}
+
+.move-right {
+	transform: translateX(-100vw);
+}
+
+.move-left {
+	transform: translateX(100vw);
 }
 </style>

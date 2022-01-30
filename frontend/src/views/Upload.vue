@@ -22,12 +22,15 @@ export default defineComponent({
 		const uploadStep = ref(0);
 		const invalidFile = ref(false);
 		const invalidInput = ref(false);
+		const loading = ref(false);
 
 		const { postForm, URL } = useFetch();
 
 		console.log('the url is: ' + URL);
 
 		const upload = async () => {
+			loading.value = true;
+
 			if (!file.value || !fileName.value) {
 				invalidInput.value = true;
 				return;
@@ -101,7 +104,8 @@ export default defineComponent({
 				100,
 			);
 			scene.add(camera);
-			camera.position.z = 2;
+			camera.position.z = 1.5;
+			camera.position.y = 0.5;
 
 			const light = new THREE.AmbientLight(0xffffff);
 			scene.add(light);
@@ -133,6 +137,7 @@ export default defineComponent({
 			uploadStep,
 			invalidFile,
 			invalidInput,
+			loading,
 		};
 	},
 });
@@ -184,12 +189,13 @@ export default defineComponent({
 							:class="{ 'text-red-400 ': invalidInput }"
 							for="inpFileName"
 						>
-							filename</label
-						>
+							filename
+						</label>
 						<input
 							class="block w-64 bg-gray-100 shadow-sm px-2 py-1 rounded-md"
 							:class="{
 								'text-red-400 bg-red-100 ': invalidInput,
+								'opacity-60 cursor-not-allowed': loading,
 							}"
 							id="inpFileName"
 							v-model="fileName"
@@ -198,7 +204,15 @@ export default defineComponent({
 					</div>
 				</div>
 
-				<button @click="upload()" class="btn-primary">Upload</button>
+				<button
+					v-if="loading"
+					class="btn-primary opacity-60 cursor-not-allowed"
+				>
+					Uploading
+				</button>
+				<button v-else @click="upload()" class="btn-primary">
+					Upload
+				</button>
 			</form>
 		</div>
 	</div>
