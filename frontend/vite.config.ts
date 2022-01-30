@@ -13,7 +13,7 @@ export default defineConfig({
 	server: {
 		https: true,
 		strictPort: true,
-		port: 3000,
+		port: 8080,
 		host: '0.0.0.0', // allow external host
 	},
 	plugins: [
