@@ -99,28 +99,28 @@ export default defineComponent({
 		// initialize the ar scene
 		initAr();
 
-		loadModelLocal('cube', () => {
-			this.isLoaded = true;
-			this.overlay = true;
-		});
+		// loadModelLocal('cube', () => {
+		// 	this.isLoaded = true;
+		// 	this.overlay = true;
+		// });
 
-		// await get(`${URL}/v1/posts/${params.id}`)
-		// 	.then((res) => {
-		// 		if (res.ok) return res.json();
-		// 		else router.push('not-found'); // if the model does not exist: go to 404 page
-		// 	})
-		// 	.then((data) => {
-		// 		// load model
-		// 		loadModel(`${URL}/public/${data.file}`, () => {
-		// 			this.isLoaded = true;
-		// 			this.overlay = true;
-		// 		});
+		await get(`${URL}/v1/posts/${params.id}`)
+			.then((res) => {
+				if (res.ok) return res.json();
+				else router.push('not-found'); // if the model does not exist: go to 404 page
+			})
+			.then((data) => {
+				// load model
+				loadModel(`${URL}/public/${data.file}`, () => {
+					this.isLoaded = true;
+					this.overlay = true;
+				});
 
-		// 		// load annotations
-		// 		data.annotations.forEach((element: any) => {
-		// 			loadText(element.message, element.x, element.y, element.z);
-		// 		});
-		// 	});
+				// load annotations
+				data.annotations.forEach((element: any) => {
+					loadText(element.message, element.x, element.y, element.z);
+				});
+			});
 	},
 });
 </script>
