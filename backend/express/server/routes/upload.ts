@@ -3,7 +3,7 @@ import multer, { diskStorage } from 'multer';
 import { nanoid } from 'nanoid';
 import { extname } from 'path';
 import Post from '../models/post';
-import { render } from '../modules/thumbnailRenderer';
+// import { render } from '../modules/thumbnailRenderer';
 
 const storage = multer.diskStorage({
 	destination: (req, file, callback) => {
