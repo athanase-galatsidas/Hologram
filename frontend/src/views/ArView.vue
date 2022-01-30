@@ -10,7 +10,7 @@ import {
 	loadModel,
 	loadModelLocal,
 	loadText,
-	turn,
+	rotate,
 	toggleAxis,
 	position,
 } from '@/modules/ArHelper';
@@ -18,7 +18,6 @@ import {
 	AnnotationIcon,
 	LogoutIcon,
 	RefreshIcon,
-	SwitchVerticalIcon,
 } from '@heroicons/vue/outline';
 
 export default defineComponent({
@@ -27,11 +26,12 @@ export default defineComponent({
 		AnnotationIcon,
 		LogoutIcon,
 		RefreshIcon,
-		SwitchVerticalIcon,
 	},
 	setup() {
 		const isLoaded = ref(false);
 		const trayVissible = ref(false);
+		const overlay = ref(false);
+		const axislbl = ref('Y');
 
 		const { socket } = useSocket();
 		const route = useRoute();
@@ -41,6 +41,10 @@ export default defineComponent({
 
 			loadText(payload.message, payload.x, payload.y, payload.z);
 		});
+
+		const closeOverlay = () => {
+			overlay.value = false;
+		};
 
 		const annotate = () => {
 			const text = (
@@ -64,21 +68,28 @@ export default defineComponent({
 			trayVissible.value = value;
 		};
 
-		const rotate = () => {
-			turn();
+		const turn = () => {
+			rotate();
 		};
 
 		const changeAxis = () => {
-			toggleAxis();
+			const axis = toggleAxis();
+
+			if (axis == 0) axislbl.value = 'Y';
+			if (axis == 1) axislbl.value = 'Z';
+			if (axis == 2) axislbl.value = 'X';
 		};
 
 		return {
 			isLoaded,
 			trayVissible,
 			annotate,
-			rotate,
+			turn,
 			changeAxis,
 			toggleTray,
+			overlay,
+			closeOverlay,
+			axislbl,
 		};
 	},
 	async mounted() {
@@ -88,26 +99,28 @@ export default defineComponent({
 		// initialize the ar scene
 		initAr();
 
-		// loadModelLocal('cube', () => {
-		// 	this.isLoaded = true;
-		// });
+		loadModelLocal('cube', () => {
+			this.isLoaded = true;
+			this.overlay = true;
+		});
 
-		await get(`${URL}/v1/posts/${params.id}`)
-			.then((res) => {
-				if (res.ok) return res.json();
-				else router.push('not-found'); // if the model does not exist: go to 404 page
-			})
-			.then((data) => {
-				// load model
-				loadModel(`${URL}/public/${data.file}`, () => {
-					this.isLoaded = true;
-				});
+		// await get(`${URL}/v1/posts/${params.id}`)
+		// 	.then((res) => {
+		// 		if (res.ok) return res.json();
+		// 		else router.push('not-found'); // if the model does not exist: go to 404 page
+		// 	})
+		// 	.then((data) => {
+		// 		// load model
+		// 		loadModel(`${URL}/public/${data.file}`, () => {
+		// 			this.isLoaded = true;
+		// 			this.overlay = true;
+		// 		});
 
-				// load annotations
-				data.annotations.forEach((element: any) => {
-					loadText(element.message, element.x, element.y, element.z);
-				});
-			});
+		// 		// load annotations
+		// 		data.annotations.forEach((element: any) => {
+		// 			loadText(element.message, element.x, element.y, element.z);
+		// 		});
+		// 	});
 	},
 });
 </script>
@@ -128,16 +141,16 @@ export default defineComponent({
 
 			<button
 				class="bg-primary active:opacity-50 hover:opacity-25 text-white w-12 h-12 p-3 rounded-md shadow-sm"
-				@click="rotate()"
+				@click="turn()"
 			>
 				<RefreshIcon />
 			</button>
 
 			<button
-				class="bg-primary active:opacity-50 hover:opacity-25 text-white w-12 h-12 p-3 rounded-md shadow-sm"
+				class="bg-primary active:opacity-50 hover:opacity-25 text-white w-12 h-12 p-2 rounded-md shadow-sm"
 				@click="changeAxis()"
 			>
-				<SwitchVerticalIcon />
+				<span class="text-xl font-medium">{{ axislbl }}</span>
 			</button>
 
 			<router-link
@@ -172,6 +185,15 @@ export default defineComponent({
 			class="flex justify-center items-center fixed top-0 left-0 z-50 w-screen h-screen bg-black bg-opacity-50"
 		>
 			<span>loading assets, please wait</span>
+		</div>
+
+		<div
+			v-show="overlay"
+			class="flex flex-col justify-center items-center fixed top-0 left-0 z-50 w-screen h-screen bg-black bg-opacity-50"
+		>
+			<span class="text-xl">Look for this marker</span>
+			<img class="w-32 h-32 my-4" src="@/assets/hiro.png" />
+			<button @click="closeOverlay()" class="btn-primary">Got it</button>
 		</div>
 	</div>
 </template>

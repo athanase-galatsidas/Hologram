@@ -11,7 +11,7 @@ import {
 } from '@ar-js-org/ar.js/three.js/build/ar-threex';
 
 const markerScene = new THREE.Scene();
-let axisToggle = false;
+let axis = 0;
 let cam: THREE.Camera;
 
 const initAr = () => {
@@ -268,9 +268,9 @@ const position = () => {
 
 	// get unit vector, used to make annotations appear in a sphere around the centre and not go too far out
 	const magnitude = Math.sqrt(x * x + y * y + z * z);
-	x = x / magnitude + 0.5;
-	y = x / magnitude + 0.5;
-	z = x / magnitude + 0.5;
+	x = (x / magnitude) * 0.5 + 0.5;
+	y = (x / magnitude) * 0.5 + 0.5;
+	z = (x / magnitude) * 0.5 + 0.5;
 
 	// return everything
 	return {
@@ -280,15 +280,20 @@ const position = () => {
 	};
 };
 
-const turn = () => {
-	markerScene.rotateY(Math.PI / 2); // 90°
+const rotate = () => {
+	if (axis == 0) markerScene.rotateY(Math.PI / 2); // 90°
+	if (axis == 1) markerScene.rotateZ(Math.PI / 2); // 90°
+	if (axis == 2) markerScene.rotateX(Math.PI / 2); // 90°
 };
 
 const toggleAxis = () => {
-	axisToggle = !axisToggle;
+	axis++;
+	if (axis > 2) axis = 0;
 
-	if (axisToggle) markerScene.rotation.z = 0;
-	else markerScene.rotation.z = -Math.PI / 4; // 45°
+	return axis;
+
+	// if (axis) markerScene.rotation.z = 0;
+	// else markerScene.rotation.z = -Math.PI / 4; // 45°
 };
 
 export {
@@ -296,7 +301,7 @@ export {
 	loadModel,
 	loadModelLocal,
 	loadText,
-	turn,
+	rotate,
 	toggleAxis,
 	position,
 };
